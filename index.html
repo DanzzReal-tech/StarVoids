@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title id="pageTitle">StarVoids — Modern Micro Store 2026</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    }
+  </script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Supabase JS SDK CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+</head>
+<body class="bg-gray-950 text-gray-100 flex flex-col min-h-screen transition-colors duration-300 selection:bg-indigo-500 selection:text-white">
+<div class="app-container">
+
+
+  <!-- Welcome / Greeting Overlay Modal -->
+  <div id="welcomeOverlay" class="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 transition-opacity duration-500">
+    <div class="glass-card w-full max-w-md rounded-3xl p-8 shadow-2xl text-center space-y-6 border border-indigo-500/20 transform scale-100 transition-all duration-300 relative z-[10000] glow-indigo">
+      <div id="welcomeModalIconContainer" class="w-16 h-16 bg-indigo-950/50 text-indigo-400 rounded-2xl mx-auto flex items-center justify-center shadow-inner overflow-hidden border border-indigo-900/40">
+        <i data-lucide="shopping-bag" class="w-8 h-8"></i>
+      </div>
+      <div class="space-y-2">
+        <h2 id="welcomeModalTitle" class="text-2xl font-extrabold text-white tracking-tight">Welcome To Store StarVoids</h2>
+        <p id="welcomeModalDesc" class="text-xs text-gray-400 leading-relaxed">Silakan jelajahi koleksi produk eksklusif dan penawaran terbaik tahun 2026.</p>
+      </div>
+      <button onclick="dismissWelcomeModal()" id="welcomeModalBtn" class="w-full bg-white text-black font-bold py-3.5 rounded-2xl transition hover:bg-gray-200 shadow-lg text-sm flex items-center justify-center gap-2 cursor-pointer">
+        <span id="welcomeBtnSpan">Lanjutkan ke Toko</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Top Announcement Bar / Running Notifications -->
+  <div id="notificationBanner" class="hidden bg-indigo-600 text-white text-xs py-2.5 px-4 relative overflow-hidden transition-all duration-300 shadow-md">
+    <div class="max-w-6xl mx-auto flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2 flex-1 min-w-0 overflow-hidden">
+        <i data-lucide="bell" class="w-4 h-4 shrink-0 text-amber-300 animate-bounce"></i>
+        <div class="w-full overflow-hidden whitespace-nowrap leading-relaxed">
+          <marquee behavior="scroll" direction="left" scrollamount="4" class="font-bold align-middle" id="notificationMarqueeText"></marquee>
+        </div>
+      </div>
+      <button onclick="dismissNotificationBanner()" class="text-white/80 hover:text-white shrink-0 p-1 rounded-lg hover:bg-indigo-700/50 transition"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+  </div>
+
+  <!-- Top Role Switcher & Auth Bar -->
+  <div class="bg-gray-900 text-white text-xs py-2 px-3 sm:px-4 border-b border-gray-800/80">
+    <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div class="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span id="storeBadgeText">Mode Toko Pembeli Aktif</span>
+        </div>
+      </div>
+      <div class="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2.5 w-full sm:w-auto overflow-x-auto no-scrollbar">
+        <!-- User Status Badge / Auth Buttons -->
+        <div id="userAuthStatusContainer" class="flex items-center gap-1.5"></div>
+
+        <!-- 3-Mode Theme Switcher (Dark, Light, System) -->
+        <div class="flex items-center bg-white/10 p-0.5 rounded-lg border border-white/10 shrink-0">
+          <button onclick="setThemeMode('light')" id="btnThemeLight" class="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold transition text-gray-300 hover:text-white" title="Tema Terang">
+            <i data-lucide="sun" class="w-3 h-3"></i> Light
+          </button>
+          <button onclick="setThemeMode('dark')" id="btnThemeDark" class="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold transition text-gray-300 hover:text-white" title="Tema Gelap">
+            <i data-lucide="moon" class="w-3 h-3"></i> Dark
+          </button>
+          <button onclick="setThemeMode('system')" id="btnThemeSystem" class="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold transition text-gray-300 hover:text-white" title="Ikut Sistem OS">
+            <i data-lucide="laptop" class="w-3 h-3"></i> System
+          </button>
+        </div>
+
+        <button onclick="toggleLanguage()" class="bg-white/10 hover:bg-white/20 px-2 py-1 rounded-md transition font-semibold text-[11px] flex items-center gap-1 shrink-0">
+          <span id="langIndicator">ID 🇮🇩</span>
+        </button>
+        <button id="navAdminPanelBtn" onclick="openAdminModal()" class="bg-indigo-600 hover:bg-indigo-500 px-2.5 py-1 rounded-md font-semibold transition text-white flex items-center gap-1 shadow-sm shrink-0">
+          <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> <span id="adminToggleText">Admin Panel</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header / Navbar -->
+  <header class="sticky top-0 z-40 bg-gray-950/90 backdrop-blur-md border-b border-gray-800">
+    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+      <a href="#" onclick="handleLogoSecretClick(event)" class="text-xl font-bold tracking-tight text-white flex items-center gap-2.5 cursor-pointer" title="Klik 5x untuk buka Admin Panel">
+        <div id="storeLogoContainer"></div>
+        <span id="storeNameBrand" class="font-black tracking-wider">StarVoids</span>
+      </a>
+
+      <div class="hidden md:flex items-center gap-2" id="headerSocialContainer"></div>
+
+      <div class="flex items-center gap-3 sm:gap-4">
+        <div class="relative hidden sm:block">
+          <input type="text" id="searchInput" oninput="renderProducts()" placeholder="Cari produk..." 
+                 class="pl-9 pr-4 py-1.5 text-sm bg-gray-900 text-white rounded-full focus:outline-none focus:ring-2 focus:ring-white w-44 transition-all border border-gray-800">
+          <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3 top-2.5"></i>
+        </div>
+
+        <!-- Tombol Riwayat Terakhir Dilihat -->
+        <button onclick="openRecentlyViewedModal()" class="relative p-2 text-gray-200 hover:text-white transition flex items-center gap-1 text-xs font-bold bg-gray-900 px-3 py-1.5 rounded-full border border-gray-800" title="Riwayat Terakhir Dilihat">
+          <i data-lucide="history" class="w-4 h-4 text-indigo-400"></i>
+          <span class="hidden sm:inline">Riwayat</span>
+        </button>
+
+        <!-- Tombol Pesanan Saya -->
+        <button onclick="toggleUserOrdersModal()" class="relative p-2 text-gray-200 hover:text-white transition flex items-center gap-1 text-xs font-bold bg-gray-900 px-3 py-1.5 rounded-full border border-gray-800">
+          <i data-lucide="receipt" class="w-4 h-4 text-indigo-400"></i>
+          <span class="hidden sm:inline">Pesanan Saya</span>
+          <span id="userOrdersBadge" class="bg-indigo-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
+        </button>
+
+        <!-- Cart Button -->
+        <button onclick="toggleCartModal()" class="relative p-2 text-gray-200 hover:text-white transition">
+          <i data-lucide="shopping-bag" class="w-6 h-6"></i>
+          <span id="cartCount" class="absolute top-0 right-0 bg-white text-black text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center hidden">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Social Media Bar -->
+  <div class="md:hidden bg-gray-900 border-b border-gray-800 px-4 py-2 flex items-center overflow-x-auto gap-3 text-xs no-scrollbar" id="mobileSocialContainer"></div>
+
+  <!-- Dynamic Custom Buttons Bar -->
+  <div class="bg-indigo-950/30 border-b border-indigo-900/50 py-2 px-4">
+    <div class="max-w-6xl mx-auto flex items-center gap-2 overflow-x-auto no-scrollbar" id="dynamicCustomButtonsBar"></div>
+  </div>
+
+  <!-- Main Storefront View -->
+  <div id="storefrontView" class="flex-1 flex flex-col">
+    <!-- Banner / Hero Section -->
+    <section class="max-w-6xl mx-auto px-4 py-6 w-full">
+      <div class="bg-gradient-to-r from-gray-900 via-gray-900 to-indigo-950 text-white rounded-3xl p-8 sm:p-12 relative overflow-hidden shadow-2xl border border-gray-800">
+        <div class="relative z-10 max-w-md">
+          <span class="inline-block bg-white/10 backdrop-blur-sm text-xs font-semibold px-3 py-1 rounded-full mb-3 text-indigo-300 border border-white/10">
+            🔥 <span id="heroBadgeText">Koleksi Tren 2026 StarVoids</span>
+          </span>
+          <h1 id="heroTitleText" class="text-3xl sm:text-4xl font-extrabold leading-tight mb-3 tracking-tight">StarVoids — Open PO T-Shirt Exclusive</h1>
+          <p id="heroDescText" class="text-gray-300 text-sm mb-6 leading-relaxed">Dapatkan produk pilihan dengan pengiriman cepat & jaminan kualitas nomor satu.</p>
+          <a href="#catalog" class="inline-flex items-center gap-2 bg-white text-black font-bold px-6 py-2.5 rounded-full hover:bg-gray-200 transition shadow-lg text-sm">
+            <span id="heroBtnText">Jelajahi Produk</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Catalog Content -->
+    <main id="catalog" class="max-w-6xl mx-auto px-4 py-6 flex-1 w-full">
+      <!-- Kategori Filter -->
+      <div class="flex items-center gap-2 overflow-x-auto pb-4 mb-6 no-scrollbar" id="categoryTabs"></div>
+      <div id="productGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6"></div>
+
+
+    </main>
+  </div>
+
+  <!-- Admin Panel View -->
+  <div id="adminView" class="hidden flex-1 max-w-6xl mx-auto px-4 py-8 w-full">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 pb-6 border-b border-gray-800">
+      <div>
+        <div class="inline-flex items-center gap-2 bg-indigo-500/10 text-indigo-400 px-3 py-1 rounded-full text-xs font-bold mb-2 border border-indigo-500/20">
+          <i data-lucide="shield" class="w-3.5 h-3.5"></i> <span id="adminDashboardBadge">ADMIN DASHBOARD STARVOIDS</span>
+        </div>
+        <h1 id="adminPanelTitleText" class="text-2xl sm:text-3xl font-extrabold tracking-tight">Panel Manajemen Toko</h1>
+        <p id="adminPanelDescText" class="text-sm text-gray-400">Atur seluruh produk, notifikasi pengumuman, akun pengguna terdaftar, staf operasional, dan pesanan pelanggan.</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <button onclick="openProductAdminModal('add')" class="bg-white text-black px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-gray-200 transition flex items-center gap-2 shadow-sm">
+          <i data-lucide="plus" class="w-4 h-4"></i> <span id="adminAddProductBtnText">Tambah Produk</span>
+        </button>
+        <button onclick="closeAdminPanel()" id="adminExitBtnText" class="bg-gray-800 hover:bg-gray-700 px-4 py-2.5 rounded-xl text-sm font-semibold transition">
+          Keluar Admin
+        </button>
+      </div>
+    </div>
+
+    <!-- Admin Tabs -->
+    <div class="flex gap-2 border-b border-gray-800 mb-6 overflow-x-auto no-scrollbar">
+      <button onclick="switchAdminTab('products')" id="tabBtnProducts" class="px-5 py-2.5 border-b-2 border-white font-bold text-sm transition">Daftar Produk</button>
+      <button onclick="switchAdminTab('analytics')" id="tabBtnAnalytics" class="px-5 py-2.5 border-b-2 border-transparent text-gray-400 font-semibold text-sm transition">📊 Analitik Penjualan</button>
+      <button onclick="switchAdminTab('staff')" id="tabBtnStaff" class="px-5 py-2.5 border-b-2 border-transparent text-gray-400 font-semibold text-sm transition">👔 Manajemen Staf</button>
+      <button onclick="switchAdminTab('coupons')" id="tabBtnCoupons" class="px-5 py-2.5 border-b-2 border-transparent text-gray-400 font-semibold text-sm transition">🎟️ Kupon Diskon</button>
+      <button onclick="switchAdminTab('reviews')" id="tabBtnReviews" class="px-5 py-2.5 border-b-2 border-transparent text-gray-400 font-semibold text-sm transition">⭐ Ulasan Produk</button>
+      <button onclick="switchAdminTab('affiliate')" id="tabBtnAffiliate" class="px-5 py-2.5 border-b-2 border-transparent text-gray-400 font-semibold text-sm transition">🤝 Program Afiliasi</button>
+      <button onclick="switchAdminTab('notifications')" id="tabBtnNotifications" class="px-5 py-2.5 border-b-2 border-transparent text-gray-400 font-semibold text-sm transition">🔔 Kelola Notifikasi</button>
+      <button onclick="switchAdminTab('users')" id="tabBtnUsers" class="px-5 py-2.5 border-b-2 border-transparent text-gray-400 font-semibold text-sm transition">👥 Akun Pengguna</button>
+      <button onclick="switchAdminTab('orders')" id="tabBtnOrders" class="px-5 py-2.5 border-b-2 border-transparent text-gray-400 font-semibold text-sm transition">📋 Daftar Pesanan</button>
+      <button onclick="switchAdminTab('categories')" id="tabBtnCategories" class="px-5 py-2.5 border-b-2 border-transparent text-gray-400 font-semibold text-sm transition">🏷️ Kategori</button>
+      <button onclick="switchAdminTab('payments')" id="tabBtnPayments" class="px-5 py-2.5 border-b-2 border-transparent text-gray-400 font-semibold text-sm transition">💳 Pembayaran</button>
+      <button onclick="switchAdminTab('storefront')" id="tabBtnStorefront" class="px-5 py-2.5 border-b-2 border-transparent text-gray-400 font-semibold text-sm transition">⚙️ Tampilan</button>
+      <button onclick="switchAdminTab('customButtons')" id="tabBtnCustomButtons" class="px-5 py-2.5 border-b-2 border-transparent text-gray-400 font-semibold text-sm transition">✨ Tombol</button>
+      <button onclick="switchAdminTab('socials')" id="tabBtnSocials" class="px-5 py-2.5 border-b-2 border-transparent text-gray-400 font-semibold text-sm transition">🌐 Sosmed</button>
+      <button onclick="switchAdminTab('settings')" id="tabBtnSettings" class="px-5 py-2.5 border-b-2 border-transparent text-gray-400 font-semibold text-sm transition">🔒 General & PIN</button>
+    </div>
+
+    <!-- Tab 1: Products Management -->
+    <div id="adminTabProducts" class="space-y-4">
+      <div class="bg-gray-900 rounded-2xl border border-gray-800 overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-gray-800/50 border-b border-gray-800 text-xs font-semibold text-gray-400">
+                <th id="thProduct" class="p-4">Produk</th>
+                <th id="thCategory" class="p-4">Kategori</th>
+                <th id="thTotalPrice" class="p-4">Harga Total</th>
+                <th id="thMinDp" class="p-4">Min. DP</th>
+                <th id="thStock" class="p-4">Stok</th>
+                <th id="thAction" class="p-4 text-right">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="adminProductTableBody" class="divide-y divide-gray-800 text-sm"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: ANALITIK PENJUALAN -->
+    <div id="adminTabAnalytics" class="hidden space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800 space-y-2">
+          <span class="text-xs font-semibold text-gray-400">Total Pendapatan Toko</span>
+          <h3 id="statTotalRevenue" class="text-2xl font-black text-emerald-400">Rp 0</h3>
+        </div>
+        <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800 space-y-2">
+          <span class="text-xs font-semibold text-gray-400">Total Pesanan Sukses</span>
+          <h3 id="statTotalOrders" class="text-2xl font-black text-indigo-400">0</h3>
+        </div>
+        <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800 space-y-2">
+          <span class="text-xs font-semibold text-gray-400">Total Pengguna Terdaftar</span>
+          <h3 id="statTotalUsersCount" class="text-2xl font-black text-amber-400">0</h3>
+        </div>
+      </div>
+      <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800 space-y-4">
+        <h3 class="font-bold text-base text-white">Ringkasan Produk Terlaris (Best Seller)</h3>
+        <div id="adminBestSellersList" class="space-y-2"></div>
+      </div>
+    </div>
+
+    <!-- FITUR 4: TAB MANAJEMEN STAF OPERASIONAL -->
+    <div id="adminTabStaff" class="hidden space-y-6 max-w-3xl">
+      <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800 space-y-4">
+        <div class="flex justify-between items-center border-b border-gray-800 pb-4">
+          <div>
+            <h3 class="font-bold text-base text-white flex items-center gap-2"><i data-lucide="user-plus" class="w-5 h-5 text-indigo-400"></i> Manajemen Staf Operasional (Staff Role)</h3>
+            <p class="text-xs text-gray-400">Admin Utama dapat menambah akun staf beserta PIN khusus untuk mengelola pesanan tanpa akses penuh ke pengaturan admin.</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <input type="text" id="staffNameInput" placeholder="Nama Staf" class="px-4 py-2.5 text-xs bg-gray-800 border border-gray-700 rounded-xl text-white font-semibold">
+          <input type="text" id="staffUsernameInput" placeholder="Username Staf" class="px-4 py-2.5 text-xs bg-gray-800 border border-gray-700 rounded-xl text-white font-semibold">
+          <input type="password" id="staffPinInput" placeholder="PIN Akses (6 digit)" class="px-4 py-2.5 text-xs bg-gray-800 border border-gray-700 rounded-xl text-white font-semibold">
+        </div>
+        <button onclick="saveNewStaff()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-5 py-2.5 rounded-xl text-xs transition flex items-center gap-1.5">+ Tambah Akun Staf</button>
+        <div id="adminStaffList" class="space-y-2 pt-2"></div>
+      </div>
+    </div>
+
+    <!-- TAB: KUPON DISKON -->
+    <div id="adminTabCoupons" class="hidden space-y-6 max-w-3xl">
+      <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800 space-y-4">
+        <div class="flex justify-between items-center border-b border-gray-800 pb-4">
+          <h3 class="font-bold text-base text-white">Kelola Kode Kupon / Voucher Diskon</h3>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <input type="text" id="couponCodeInput" placeholder="Kode (Misal: HEMAT50)" class="px-4 py-2.5 text-xs bg-gray-800 border border-gray-700 rounded-xl text-white uppercase font-bold">
+          <select id="couponTypeInput" class="px-3 py-2.5 text-xs bg-gray-800 border border-gray-700 rounded-xl text-white">
+            <option value="percent">Diskon Persen (%)</option>
+            <option value="nominal">Potongan Nominal (Rp)</option>
+          </select>
+          <input type="number" id="couponValueInput" placeholder="Nilai (Misal: 10 atau 20000)" class="px-4 py-2.5 text-xs bg-gray-800 border border-gray-700 rounded-xl text-white">
+        </div>
+        <button onclick="saveNewCoupon()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-5 py-2.5 rounded-xl text-xs transition">+ Tambah Kupon Diskon</button>
+        <div id="adminCouponList" class="space-y-2 pt-2"></div>
+      </div>
+    </div>
+
+    <!-- TAB: ULASAN PRODUK -->
+    <div id="adminTabReviews" class="hidden space-y-6">
+      <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800 space-y-4">
+        <h3 class="font-bold text-base text-white">Daftar Ulasan & Rating Produk dari Pembeli</h3>
+        <div id="adminReviewsList" class="space-y-3"></div>
+      </div>
+    </div>
+
+    <!-- TAB: PROGRAM AFILIASI -->
+    <div id="adminTabAffiliate" class="hidden space-y-6">
+      <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800 space-y-4">
+        <h3 class="font-bold text-base text-white">Program Afiliasi & Komisi Referral Pengguna</h3>
+        <p class="text-xs text-gray-400">Setiap pengguna memiliki link referral unik: <code class="bg-gray-800 px-2 py-1 rounded text-indigo-300">?ref=username</code>. Berikut statistik komisi afiliasi:</p>
+        <div id="adminAffiliateList" class="space-y-2"></div>
+      </div>
+    </div>
+
+    <!-- FITUR: TAB NOTIFIKASI PENGUMUMAN DENGAN TIMEOUT / HAPUS LANGSUNG -->
+    <div id="adminTabNotifications" class="hidden space-y-6 max-w-2xl">
+      <div class="bg-gray-900 rounded-2xl border border-gray-800 p-6 shadow-sm space-y-4">
+        <div class="flex justify-between items-center border-b border-gray-800 pb-4">
+          <div>
+            <h3 class="font-bold text-base text-white flex items-center gap-2"><i data-lucide="bell" class="w-5 h-5 text-indigo-400"></i> Kelola Notifikasi Pengumuman Toko</h3>
+            <p class="text-xs text-gray-400">Atur pesan notifikasi running text yang tampil di bagian paling atas toko pembeli.</p>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold mb-1 text-gray-400">Isi Teks Notifikasi *</label>
+            <input type="text" id="notifTextInput" placeholder="Contoh: 🚀 Promo Diskon Ongkir s/d 50% Hari Ini!" class="w-full px-4 py-2.5 text-sm bg-gray-800 border border-gray-700 rounded-xl text-white font-semibold">
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold mb-1 text-gray-400">Durasi Hapus Otomatis (Opsional)</label>
+              <select id="notifExpiryTypeInput" onchange="toggleNotifExpiryField(this.value)" class="w-full px-3 py-2.5 text-xs bg-gray-800 border border-gray-700 rounded-xl text-white">
+                <option value="none">Selamanya (Manual Hapus)</option>
+                <option value="minutes">Hitung Menit (Timer)</option>
+                <option value="date">Berdasarkan Tanggal & Jam Spesifik</option>
+              </select>
+            </div>
+            <div id="notifExpiryMinutesWrap" class="hidden">
+              <label class="block text-xs font-semibold mb-1 text-gray-400">Hapus Dalam (Menit)</label>
+              <input type="number" id="notifMinutesInput" placeholder="10" class="w-full px-4 py-2.5 text-xs bg-gray-800 border border-gray-700 rounded-xl text-white">
+            </div>
+            <div id="notifExpiryDateWrap" class="hidden col-span-2">
+              <label class="block text-xs font-semibold mb-1 text-gray-400">Tanggal Hapus Otomatis</label>
+              <input type="datetime-local" id="notifDateTimeInput" class="w-full px-4 py-2.5 text-xs bg-gray-800 border border-gray-700 rounded-xl text-white">
+            </div>
+          </div>
+
+          <div class="p-3 bg-gray-800/40 rounded-xl border border-gray-700 flex items-center gap-2">
+            <input type="checkbox" id="settingNotifAnimation" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 bg-gray-800 border-gray-700">
+            <label for="settingNotifAnimation" class="text-xs font-semibold text-gray-300">Aktifkan Animasi Gerak / Pulse pada Notifikasi Banner</label>
+          </div>
+
+          <button onclick="saveNotificationSettings()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition text-xs flex items-center justify-center gap-2">
+            <i data-lucide="check" class="w-4 h-4"></i> Simpan & Tampilkan Notifikasi Toko
+          </button>
+        </div>
+
+        <!-- Notification Status Card -->
+        <div id="activeNotifCard" class="mt-6 p-4 bg-gray-800/50 rounded-2xl border border-gray-700 hidden">
+          <div class="flex items-center justify-between">
+            <div class="space-y-1">
+              <span class="text-[10px] uppercase font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">Notifikasi Aktif</span>
+              <p id="activeNotifText" class="text-sm font-bold text-white"></p>
+              <p id="activeNotifMeta" class="text-xs text-gray-400"></p>
+            </div>
+            <button onclick="deleteActiveNotification()" class="bg-red-500/10 text-red-400 hover:bg-red-500/20 px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1">
+              <i data-lucide="trash-2" class="w-4 h-4"></i> Hapus Langsung
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FITUR: TAB KELOLA AKUN PENGGUNA TERDAFTAR -->
+    <div id="adminTabUsers" class="hidden space-y-6">
+      <div class="bg-gray-900 rounded-2xl border border-gray-800 p-6 shadow-sm space-y-4">
+        <div class="flex justify-between items-center border-b border-gray-800 pb-4">
+          <div>
+            <h3 class="font-bold text-base text-white flex items-center gap-2"><i data-lucide="users" class="w-5 h-5 text-indigo-400"></i> Akun Pengguna Terdaftar (Register & Login)</h3>
+            <p class="text-xs text-gray-400">Daftar pelanggan yang telah mendaftarkan akun di sistem toko StarVoids.</p>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-gray-800/50 border-b border-gray-800 text-xs font-semibold text-gray-400">
+                <th class="p-4">Pengguna</th>
+                <th class="p-4">Email</th>
+                <th class="p-4">No. WhatsApp</th>
+                <th class="p-4">Tanggal Daftar</th>
+                <th class="p-4 text-right">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="adminUsersTableBody" class="divide-y divide-gray-800 text-sm"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- FITUR 3 & ADMIN: TAB DAFTAR PESANAN SEMUA PENGGUNA -->
+    <div id="adminTabOrders" class="hidden space-y-4">
+      <div class="bg-gray-900 rounded-2xl border border-gray-800 p-6 shadow-sm">
+        <h3 id="ordersMgmtTitle" class="font-bold text-base mb-4 flex items-center gap-2 text-white"><i data-lucide="clipboard-list" class="w-5 h-5"></i> Riwayat Pesanan Pelanggan & Pembayaran</h3>
+        <div id="adminOrderList" class="space-y-4"></div>
+      </div>
+    </div>
+
+    <!-- Tab Categories Management -->
+    <div id="adminTabCategories" class="hidden space-y-6 max-w-2xl">
+      <div class="bg-gray-900 rounded-2xl border border-gray-800 p-6 shadow-sm space-y-4">
+        <h3 id="catMgmtTitle" class="font-bold text-base flex items-center gap-2 text-white"><i data-lucide="tag" class="w-5 h-5 text-indigo-400"></i> Kelola Kategori Produk</h3>
+        <p id="catMgmtDesc" class="text-xs text-gray-400">Tambah atau hapus kategori yang tampil di bagian atas katalog toko.</p>
+        <div class="space-y-2" id="adminCategoryListContainer"></div>
+        <div class="pt-4 border-t border-gray-800 flex gap-2">
+          <input type="text" id="newCategoryInput" placeholder="Nama Kategori Baru" class="flex-1 px-4 py-2.5 text-xs bg-gray-800 border border-gray-700 rounded-xl text-white">
+          <button onclick="addNewCategory()" id="addCatBtnText" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-md">+ Tambah Kategori</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Payments Management -->
+    <div id="adminTabPayments" class="hidden space-y-6 max-w-3xl">
+      <div class="bg-gray-900 rounded-2xl border border-gray-800 p-6 shadow-sm space-y-4">
+        <div class="flex justify-between items-center border-b border-gray-800 pb-4">
+          <div>
+            <h3 id="payMgmtTitle" class="font-bold text-base text-white">Metode Pembayaran Interaktif (QRIS / DANA / Bank)</h3>
+            <p id="payMgmtDesc" class="text-xs text-gray-400">Pelanggan akan diarahkan ke modal khusus saat proses checkout.</p>
+          </div>
+          <button onclick="openPaymentModal('add')" id="addPayBtnText" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-bold">+ Tambah Metode</button>
+        </div>
+        <div class="grid grid-cols-1 gap-4" id="adminPaymentList"></div>
+      </div>
+    </div>
+
+    <!-- Tab Storefront & Welcome Greeting Settings -->
+    <div id="adminTabStorefront" class="hidden space-y-6 max-w-2xl">
+      <div class="bg-gray-900 rounded-2xl border border-gray-800 p-6 shadow-sm space-y-4">
+        <h3 id="storefrontSettingsTitle" class="font-bold text-base mb-2 flex items-center gap-2 text-white"><i data-lucide="layout" class="w-5 h-5 text-indigo-400"></i> Pengaturan Sambutan & Banner Toko Pembeli</h3>
+        
+        <div class="p-4 bg-indigo-950/40 rounded-2xl border border-indigo-900/50 space-y-3">
+          <label id="welcomePopupLabel" class="block text-xs font-bold uppercase tracking-wider text-indigo-400">Popup Sambutan Awal (Welcome Screen)</label>
+          
+          <div>
+            <label id="welcomeLogoLabel" class="block text-xs font-semibold mb-1 text-gray-400">Upload Logo Sambutan (PNG/JPEG)</label>
+            <div class="flex items-center gap-4">
+              <div id="previewWelcomeLogoAdmin" class="w-12 h-12 rounded-xl bg-gray-800 flex items-center justify-center overflow-hidden border border-gray-700"></div>
+              <div class="flex-1">
+                <input type="file" id="welcomeLogoFileInput" accept="image/*" onchange="handleWelcomeLogoUpload(event)" class="w-full text-xs text-gray-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-900/60 file:text-indigo-200">
+              </div>
+              <button onclick="resetWelcomeLogo()" id="resetLogoBtn" class="px-3 py-1.5 bg-gray-800 text-xs font-semibold rounded-xl text-gray-300">Reset</button>
+            </div>
+          </div>
+
+          <div>
+            <label id="welcomeTitleLabel" class="block text-xs font-semibold mb-1 text-gray-400">Judul Sambutan *</label>
+            <input type="text" id="settingWelcomeTitle" class="w-full px-4 py-2.5 text-sm bg-gray-800 border border-gray-700 rounded-xl focus:outline-none text-white font-bold">
+          </div>
+          <div>
+            <label id="welcomeDescLabel" class="block text-xs font-semibold mb-1 text-gray-400">Deskripsi Sambutan *</label>
+            <textarea id="settingWelcomeDesc" rows="2" class="w-full px-4 py-2.5 text-sm bg-gray-800 border border-gray-700 rounded-xl focus:outline-none text-white"></textarea>
+          </div>
+          <div>
+            <label id="welcomeBtnLabel" class="block text-xs font-semibold mb-1 text-gray-400">Teks Tombol Lanjutkan *</label>
+            <input type="text" id="settingWelcomeBtn" class="w-full px-4 py-2.5 text-sm bg-gray-800 border border-gray-700 rounded-xl focus:outline-none text-white">
+          </div>
+          <div class="flex items-center gap-2 pt-2">
+            <input type="checkbox" id="settingShowWelcome" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 bg-gray-800 border-gray-700">
+            <label id="showWelcomeLabel" for="settingShowWelcome" class="text-xs font-semibold text-gray-300">Tampilkan popup sambutan setiap kali halaman dibuka</label>
+          </div>
+        </div>
+
+        <div class="p-4 bg-gray-800/40 rounded-2xl border border-gray-700 space-y-3">
+          <label id="fullPaymentSettingsLabel" class="block text-xs font-bold uppercase tracking-wider text-gray-400">Pengaturan Pembayaran Lunas</label>
+          <div class="flex items-center gap-2">
+            <input type="checkbox" id="settingAllowFullPayment" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 bg-gray-800 border-gray-700">
+            <label id="allowFullPaymentLabel" for="settingAllowFullPayment" class="text-xs font-semibold text-gray-300">Izinkan opsi Pembayaran Lunas (100%) di modal produk</label>
+          </div>
+        </div>
+
+        <div class="p-4 bg-gray-800/40 rounded-2xl border border-gray-700 space-y-3">
+          <label class="block text-xs font-bold uppercase tracking-wider text-indigo-400">Tema Awal Pengunjung (Default Theme)</label>
+          <p class="text-xs text-gray-400">Pilih tema default saat pengunjung pertama kali membuka toko:</p>
+          <select id="settingDefaultVisitorTheme" class="w-full px-4 py-2.5 text-xs bg-gray-800 border border-gray-700 rounded-xl text-white">
+            <option value="dark">🌙 Dark (Gelap)</option>
+            <option value="light">☀️ Light (Terang)</option>
+            <option value="system">💻 System (Ikuti OS)</option>
+          </select>
+        </div>
+
+        <div class="p-4 bg-gray-800/40 rounded-2xl border border-gray-700 space-y-3">
+          <label id="bannerSettingsLabel" class="block text-xs font-bold uppercase tracking-wider text-gray-400">Banner / Hero Section Toko</label>
+          <div>
+            <label id="bannerBadgeLabel" class="block text-xs font-semibold mb-1 text-gray-400">Badge Banner</label>
+            <input type="text" id="settingHeroBadge" class="w-full px-4 py-2 text-sm bg-gray-800 border border-gray-700 rounded-xl text-white">
+          </div>
+          <div>
+            <label id="bannerTitleLabel" class="block text-xs font-semibold mb-1 text-gray-400">Judul Utama Banner</label>
+            <input type="text" id="settingHeroTitle" class="w-full px-4 py-2 text-sm bg-gray-800 border border-gray-700 rounded-xl text-white font-bold">
+          </div>
+          <div>
+            <label id="bannerDescLabel" class="block text-xs font-semibold mb-1 text-gray-400">Deskripsi Banner</label>
+            <textarea id="settingHeroDesc" rows="2" class="w-full px-4 py-2 text-sm bg-gray-800 border border-gray-700 rounded-xl text-white"></textarea>
+          </div>
+          <div>
+            <label id="bannerBtnLabel" class="block text-xs font-semibold mb-1 text-gray-400">Teks Tombol Jelajahi</label>
+            <input type="text" id="settingHeroBtn" class="w-full px-4 py-2 text-sm bg-gray-800 border border-gray-700 rounded-xl text-white">
+          </div>
+        </div>
+
+        <button onclick="saveStorefrontSettings()" id="saveStorefrontBtnText" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl text-sm font-bold transition shadow-lg">
+          Simpan Seluruh Pengaturan Tampilan Toko
+        </button>
+      </div>
+    </div>
+
+    <!-- Tab 4: Custom Buttons Manager -->
+    <div id="adminTabCustomButtons" class="hidden space-y-6">
+      <div class="bg-gray-900 rounded-2xl border border-gray-800 p-6 shadow-sm">
+        <div class="flex justify-between items-center mb-6">
+          <div>
+            <h3 id="customBtnMgmtTitle" class="font-bold text-base flex items-center gap-2 text-white"><i data-lucide="plus-circle" class="w-5 h-5 text-indigo-400"></i> Kelola Tombol Kustom Mandiri</h3>
+            <p id="customBtnMgmtDesc" class="text-xs text-gray-400">Tambahkan tombol baru sendiri yang akan tampil di halaman utama toko pembeli.</p>
+          </div>
+          <button onclick="openCustomBtnModal('add')" id="addCustomBtnText" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition">
+            <i data-lucide="plus" class="w-4 h-4"></i> Tambah Tombol Baru
+          </button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="adminCustomBtnList"></div>
+      </div>
+    </div>
+
+    <!-- Tab 5: Social Media Management -->
+    <div id="adminTabSocials" class="hidden space-y-6">
+      <div class="bg-gray-900 rounded-2xl border border-gray-800 p-6 shadow-sm">
+        <div class="flex justify-between items-center mb-6">
+          <div>
+            <h3 id="socialMgmtTitle" class="font-bold text-base flex items-center gap-2 text-white"><i data-lucide="share-2" class="w-5 h-5 text-indigo-400"></i> Kelola Tautan Sosmed & Ikon</h3>
+            <p id="socialMgmtDesc" class="text-xs text-gray-400">Atur link sosmed yang tampil di toko pembeli.</p>
+          </div>
+          <button onclick="openSocialModal('add')" id="addSocialBtnText" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition">
+            <i data-lucide="plus" class="w-4 h-4"></i> Tambah Sosmed Baru
+          </button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="adminSocialList"></div>
+      </div>
+    </div>
+
+    <!-- Tab 7: General Settings & Logo -->
+    <div id="adminTabSettings" class="hidden space-y-6 max-w-2xl">
+      <div class="bg-gray-900 rounded-2xl border border-gray-800 p-6 shadow-sm space-y-4">
+        <h3 id="generalSettingsTitle" class="font-bold text-base mb-2 flex items-center gap-2 text-white"><i data-lucide="settings" class="w-5 h-5"></i> Pengaturan Umum & Logo Toko</h3>
+        
+        <div class="p-4 bg-gray-800/40 rounded-2xl border border-gray-700 space-y-3">
+          <label id="storeLogoUploadLabel" class="block text-xs font-bold uppercase tracking-wider text-indigo-400">Upload Logo Toko (PNG/JPEG)</label>
+          <div class="flex items-center gap-4">
+            <div id="previewStoreLogoAdmin" class="w-12 h-12 rounded-xl bg-gray-800 flex items-center justify-center overflow-hidden border border-gray-700"></div>
+            <div class="flex-1">
+              <input type="file" id="storeLogoFileInput" accept="image/*" onchange="handleStoreLogoUpload(event)" class="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-900/60 file:text-indigo-200">
+            </div>
+            <button onclick="resetStoreLogo()" id="resetStoreLogoBtn" class="px-3 py-2 bg-gray-800 text-xs font-semibold rounded-xl text-gray-300">Reset</button>
+          </div>
+        </div>
+
+        <div>
+          <label id="storeNameLabel" class="block text-xs font-semibold mb-1 text-gray-400">Nama Toko *</label>
+          <input type="text" id="settingStoreName" class="w-full px-4 py-2.5 text-sm bg-gray-800 border border-gray-700 rounded-xl focus:outline-none text-white font-bold">
+        </div>
+
+        <div>
+          <label id="adminWaLabel" class="block text-xs font-semibold mb-1 text-gray-400">Nomor WhatsApp Admin (Format: 628xxx) *</label>
+          <input type="text" id="settingAdminWa" class="w-full px-4 py-2.5 text-sm bg-gray-800 border border-gray-700 rounded-xl focus:outline-none text-white">
+        </div>
+
+        <div>
+          <label id="adminPinLabel" class="block text-xs font-semibold mb-1 text-gray-400">Ubah PIN Keamanan Admin Baru</label>
+          <input type="password" id="settingAdminPin" placeholder="Masukkan 6 digit angka PIN baru" class="w-full px-4 py-2.5 text-sm bg-gray-800 border border-gray-700 rounded-xl focus:outline-none text-white">
+        </div>
+
+        <div class="p-4 bg-gray-800/40 rounded-2xl border border-gray-700 space-y-3">
+          <label class="block text-xs font-bold uppercase tracking-wider text-indigo-400">Keamanan & Tampilan Admin</label>
+          <div class="flex items-center gap-2">
+            <input type="checkbox" id="settingHideAdminBtn" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 bg-gray-800 border-gray-700">
+            <label for="settingHideAdminBtn" class="text-xs font-semibold text-gray-300">Sembunyikan Tombol Admin Panel dari Pembeli (Akses rahasia via klik logo 5x)</label>
+          </div>
+        </div>
+
+        <button onclick="saveStoreSettings()" id="saveStoreSettingsBtnText" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl text-sm font-bold transition shadow-lg">
+          Simpan Pengaturan Umum
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-gray-900 border-t border-gray-800 mt-12 py-8 transition-colors duration-300">
+    <div class="max-w-6xl mx-auto px-4 text-center text-xs text-gray-400 space-y-3">
+      <div class="flex flex-wrap items-center justify-center gap-4 mb-2" id="footerSocialContainer"></div>
+      <p id="footerCopyText">© 2026 StarVoids Micro-Store Professional. All Rights Reserved.</p>
+    </div>
+  </footer>
+
+  <!-- FITUR: MODAL LOGIN / REGISTER UNTUK PENGGUNA -->
+  <div id="userAuthModal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="bg-gray-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-gray-800 relative space-y-4">
+      <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+        <h3 id="authModalTitle" class="font-bold text-lg text-white flex items-center gap-2">
+          <i data-lucide="user-check" class="w-5 h-5 text-indigo-400"></i> Masuk Akun
+        </h3>
+        <button onclick="closeUserAuthModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <!-- Toggle Login / Register -->
+      <div class="flex bg-gray-800 p-1 rounded-xl text-xs font-bold">
+        <button onclick="switchAuthTab('login')" id="authTabLoginBtn" class="flex-1 py-2 rounded-lg bg-indigo-600 text-white transition">Login</button>
+        <button onclick="switchAuthTab('register')" id="authTabRegBtn" class="flex-1 py-2 rounded-lg text-gray-400 hover:text-white transition">Daftar Akun</button>
+      </div>
+
+      <!-- Login Form -->
+      <div id="loginFormWrap" class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold mb-1 text-gray-400">Username / Email *</label>
+          <input type="text" id="loginUsernameInput" placeholder="Masukkan username atau email..." autocomplete="off" class="w-full px-4 py-2.5 text-xs bg-gray-800 border border-gray-700 rounded-xl text-white">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold mb-1 text-gray-400">Password / PIN *</label>
+          <input type="password" id="loginPasswordInput" placeholder="Password atau PIN staf..." autocomplete="current-password" class="w-full px-4 py-2.5 text-xs bg-gray-800 border border-gray-700 rounded-xl text-white">
+        </div>
+        <button onclick="processUserLogin()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition shadow-lg text-xs">
+          Masuk Sekarang
+        </button>
+      </div>
+
+      <!-- Register Form -->
+      <div id="registerFormWrap" class="space-y-3 hidden">
+        <div>
+          <label class="block text-xs font-semibold mb-1 text-gray-400">Nama Lengkap *</label>
+          <input type="text" id="regNameInput" placeholder="Nama Anda..." autocomplete="off" class="w-full px-4 py-2.5 text-xs bg-gray-800 border border-gray-700 rounded-xl text-white">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold mb-1 text-gray-400">Username *</label>
+          <input type="text" id="regUsernameInput" placeholder="username..." autocomplete="off" class="w-full px-4 py-2.5 text-xs bg-gray-800 border border-gray-700 rounded-xl text-white">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold mb-1 text-gray-400">Email (@gmail.com) *</label>
+          <input type="email" id="regEmailInput" placeholder="nama@gmail.com" autocomplete="off" class="w-full px-4 py-2.5 text-xs bg-gray-800 border border-gray-700 rounded-xl text-white">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold mb-1 text-gray-400">No. WhatsApp (08xxx) *</label>
+          <input type="text" id="regWaInput" placeholder="0822xxx..." autocomplete="off" class="w-full px-4 py-2.5 text-xs bg-gray-800 border border-gray-700 rounded-xl text-white">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold mb-1 text-gray-400">Password *</label>
+          <input type="password" id="regPasswordInput" placeholder="Password rahasia..." autocomplete="new-password" class="w-full px-4 py-2.5 text-xs bg-gray-800 border border-gray-700 rounded-xl text-white">
+        </div>
+        <button type="button" onclick="processUserRegister()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition shadow-lg text-xs cursor-pointer">
+          Buat Akun Baru
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FITUR 3: MODAL "PESANAN SAYA" DENGAN STATUS TRACKING TRANSPARAN -->
+  <div id="userOrdersModal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="bg-gray-900 w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl border border-gray-800 flex flex-col max-h-[85vh]">
+      <div class="p-6 border-b border-gray-800 flex items-center justify-between">
+        <h3 class="font-bold text-lg text-white flex items-center gap-2"><i data-lucide="receipt" class="w-5 h-5 text-indigo-400"></i> Pesanan Saya & Status Lacak</h3>
+        <button onclick="toggleUserOrdersModal()" class="p-1 text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <div id="userOrdersList" class="p-6 overflow-y-auto space-y-4 flex-1"></div>
+    </div>
+  </div>
+
+  
+  <!-- MODAL POPUP RIWAYAT TERAKHIR DILIHAT -->
+  <div id="recentlyViewedModal" class="fixed inset-0 z-[10003] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="bg-gray-900 w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl border border-gray-800 flex flex-col max-h-[85vh]">
+      <div class="p-6 border-b border-gray-800 flex items-center justify-between">
+        <h3 class="font-bold text-lg text-white flex items-center gap-2">
+          <i data-lucide="history" class="w-5 h-5 text-indigo-400"></i> Riwayat Terakhir Dilihat
+        </h3>
+        <button onclick="closeRecentlyViewedModal()" class="p-1 text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <div id="recentlyViewedModalBody" class="p-6 overflow-y-auto space-y-4 flex-1"></div>
+    </div>
+  </div>
+
+  <!-- MODAL POPUP ULASAN & TESTIMONI (PERBAIKAN FOTO 1) -->
+  <div id="reviewsPopupModal" class="fixed inset-0 z-[10002] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="bg-gray-900 w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl border border-gray-800 flex flex-col max-h-[85vh]">
+      <div class="p-6 border-b border-gray-800 flex items-center justify-between">
+        <h3 id="reviewsPopupTitle" class="font-bold text-lg text-white flex items-center gap-2">
+          <i data-lucide="star" class="w-5 h-5 text-amber-400 fill-amber-400"></i> Ulasan & Testimoni Pembeli
+        </h3>
+        <button onclick="closeReviewsPopupModal()" class="p-1 text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <div id="reviewsPopupBody" class="p-6 overflow-y-auto space-y-4 flex-1"></div>
+    </div>
+  </div>
+
+  <!-- Admin Login Modal -->
+  <div id="adminLoginModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="bg-gray-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl transform scale-95 transition-transform duration-300 border border-gray-800">
+      <div class="flex items-center justify-between mb-4">
+        <h3 id="adminLoginModalTitle" class="font-bold text-lg text-white flex items-center gap-2"><i data-lucide="lock" class="w-5 h-5 text-indigo-400"></i> Autentikasi Admin / Staf</h3>
+        <button onclick="closeAdminModal()" class="p-1 text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <p id="adminLoginModalDesc" class="text-xs text-gray-400 mb-4">Masukkan PIN Admin / PIN Staf rahasia Anda untuk masuk ke Dashboard Panel.</p>
+      <input type="password" id="adminPinInput" placeholder="PIN (Default: 123456)" class="w-full px-4 py-3 text-sm bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-4 text-center tracking-widest font-bold text-white">
+      <div id="adminLoginError" class="text-xs text-red-400 mb-3 hidden text-center font-semibold">PIN yang Anda masukkan salah!</div>
+      <button onclick="verifyAdminPin()" id="adminLoginBtnText" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition shadow-lg text-sm">Masuk Dashboard</button>
+    </div>
+  </div>
+
+  <!-- Alert Custom Modal -->
+  <div id="alertModal" class="fixed inset-0 z-[10000] bg-black/75 backdrop-blur-md flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
+    <div class="bg-[#121826] border border-[#232d42] rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl transform scale-90 transition-transform duration-300">
+      <div class="w-16 h-16 bg-[#1b2336] rounded-2xl flex items-center justify-center mx-auto mb-5 text-2xl shadow-inner border border-indigo-900/50">
+        <i data-lucide="check-circle" class="w-8 h-8 text-emerald-400"></i>
+      </div>
+      <h2 class="text-xl font-extrabold text-white mb-2" id="alertModalTitle">Halaman ini menyatakan</h2>
+      <p class="text-sm text-[#94a3b8] leading-relaxed mb-6" id="alertModalMessage">Data produk berhasil disimpan!</p>
+      <button onclick="closeAlertModal()" id="alertModalOkBtn" class="w-full bg-white text-[#0b0f19] font-bold py-3.5 rounded-full transition hover:bg-gray-200 text-sm shadow-lg">
+        Oke
+      </button>
+    </div>
+  </div>
+
+  <!-- Custom Confirm Modal -->
+  <div id="customConfirmModal" class="fixed inset-0 z-[10001] bg-black/75 backdrop-blur-md flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
+    <div class="bg-[#1e2330] border border-gray-700/60 rounded-3xl p-7 max-w-sm w-full text-left shadow-2xl transform scale-90 transition-transform duration-300">
+      <h3 class="text-lg font-bold text-white mb-4" id="confirmModalTitle">Halaman ini menyatakan</h3>
+      <p class="text-sm text-gray-300 leading-relaxed mb-8" id="confirmModalMessage">Yakin ingin menghapus riwayat pesanan ini?</p>
+      <div class="flex justify-end gap-6 text-sm font-semibold">
+        <button onclick="closeCustomConfirm(false)" class="text-indigo-400 hover:text-indigo-300 font-bold px-2 py-1">Batal</button>
+        <button onclick="closeCustomConfirm(true)" class="text-indigo-400 hover:text-indigo-300 font-bold px-2 py-1">Oke</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Payment Modal -->
+  <div id="adminPaymentModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="bg-gray-900 w-full max-w-md rounded-3xl p-6 shadow-2xl border border-gray-800 space-y-4">
+      <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+        <h3 id="adminPaymentModalTitle" class="font-bold text-base text-white">Metode Pembayaran</h3>
+        <button onclick="closePaymentModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <input type="hidden" id="editPaymentId">
+      <div>
+        <label id="payNameLabel" class="block text-xs font-semibold mb-1 text-gray-400">Nama Metode *</label>
+        <input type="text" id="paymentNameInput" placeholder="Nama Metode" class="w-full px-4 py-2.5 text-xs bg-gray-800 border border-gray-700 rounded-xl text-white">
+      </div>
+      <div>
+        <label id="payTypeLabel" class="block text-xs font-semibold mb-1 text-gray-400">Tipe Pembayaran *</label>
+        <select id="paymentTypeInput" class="w-full px-4 py-2.5 text-xs bg-gray-800 border border-gray-700 rounded-xl text-white">
+          <option value="qris" id="optQris">QRIS (Muncul Gambar QR Code / QRIS Scan)</option>
+          <option value="dana" id="optDana">E-Wallet / No DANA (Ada tombol Salin & Buka DANA)</option>
+          <option value="bank" id="optBank">Transfer Bank (No Rekening Biasa)</option>
+        </select>
+      </div>
+      <div>
+        <label id="payAccountLabel" class="block text-xs font-semibold mb-1 text-gray-400">No HP / Link Pembayaran *</label>
+        <input type="text" id="paymentAccountInput" placeholder="No Hp / Link Pembayaran" class="w-full px-4 py-2.5 text-xs bg-gray-800 border border-gray-700 rounded-xl text-white">
+      </div>
+      <div>
+        <label id="payDescLabel" class="block text-xs font-semibold mb-1 text-gray-400">Info / Deskripsi *</label>
+        <input type="text" id="paymentDescInput" placeholder="info / deskripsi" class="w-full px-4 py-2.5 text-xs bg-gray-800 border border-gray-700 rounded-xl text-white">
+      </div>
+
+      <!-- Upload QRIS Image -->
+      <div>
+        <label id="payQrUploadLabel" class="block text-xs font-semibold mb-1 text-gray-400">Upload Gambar (File Gambar)</label>
+        <div class="border-2 border-dashed border-gray-700 hover:border-indigo-500 rounded-xl p-3 text-center bg-gray-800/50 cursor-pointer relative">
+          <input type="file" id="paymentQrFileInput" accept="image/*" onchange="handleQRISFileUpload(this)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+          <div class="flex flex-col items-center gap-1">
+            <i data-lucide="upload-cloud" class="w-5 h-5 text-indigo-400"></i>
+            <span id="payClickUploadText" class="text-xs text-gray-300 font-semibold">Klik untuk pilih upload gambar dari file</span>
+          </div>
+        </div>
+        <img id="qrisPreviewImg" class="mt-2 max-h-28 mx-auto rounded-lg border border-gray-700 hidden" alt="Preview Gambar">
+      </div>
+
+      <div>
+        <label id="payQrUrlLabel" class="block text-xs font-semibold mb-1 text-gray-400">URL Gambar (Opsional)</label>
+        <input type="text" id="paymentQrImgInput" placeholder="https://..." class="w-full px-4 py-2 text-xs bg-gray-800 border border-gray-700 rounded-xl text-white">
+      </div>
+
+      <div class="flex justify-end gap-3 pt-2">
+        <button onclick="closePaymentModal()" id="payCancelBtn" class="px-4 py-2 bg-gray-800 text-gray-300 text-xs font-semibold rounded-xl">Batal</button>
+        <button onclick="savePaymentData()" id="paySaveBtn" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-md">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Button Add/Edit Modal -->
+  <div id="adminCustomBtnModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="bg-gray-900 w-full max-w-md rounded-3xl overflow-hidden shadow-2xl border border-gray-800 flex flex-col">
+      <div class="p-6 border-b border-gray-800 flex items-center justify-between">
+        <h3 id="adminCustomBtnModalTitle" class="font-bold text-lg text-white">Tambah Tombol Kustom</h3>
+        <button onclick="closeCustomBtnModal()" class="p-1 text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <div class="p-6 space-y-4">
+        <input type="hidden" id="editCustomBtnId">
+        <div>
+          <label id="customBtnTextLabel" class="block text-xs font-semibold mb-1 text-gray-400">Teks Tombol *</label>
+          <input type="text" id="customBtnText" placeholder="Contoh: Klaim Voucher Promo" class="w-full px-4 py-2.5 text-sm bg-gray-800 border border-gray-700 rounded-xl text-white">
+        </div>
+        <div>
+          <label id="customBtnUrlLabel" class="block text-xs font-semibold mb-1 text-gray-400">URL / Tautan Tombol *</label>
+          <input type="text" id="customBtnUrl" placeholder="https://..." class="w-full px-4 py-2.5 text-sm bg-gray-800 border border-gray-700 rounded-xl text-white">
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label id="customBtnIconLabel" class="block text-xs font-semibold mb-1 text-gray-400">Ikon (Lucide icon name)</label>
+            <input type="text" id="customBtnIcon" value="sparkles" class="w-full px-4 py-2 text-xs bg-gray-800 border border-gray-700 rounded-xl text-white">
+          </div>
+          <div>
+            <label id="customBtnColorLabel" class="block text-xs font-semibold mb-1 text-gray-400">Warna Tombol</label>
+            <select id="customBtnColor" class="w-full px-3 py-2 text-xs bg-gray-800 border border-gray-700 rounded-xl text-white">
+              <option value="indigo" id="colIndigo">Indigo / Ungu</option>
+              <option value="emerald" id="colEmerald">Hijau Emerald</option>
+              <option value="amber" id="colAmber">Kuning Amber</option>
+              <option value="rose" id="colRose">Merah Rose</option>
+              <option value="dark" id="colDark">Hitam / Gelap</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="p-6 border-t border-gray-800 bg-gray-800/30 flex justify-end gap-3">
+        <button onclick="closeCustomBtnModal()" id="customBtnCancelBtn" class="px-4 py-2.5 rounded-xl border border-gray-700 text-sm font-semibold text-gray-300">Batal</button>
+        <button onclick="saveCustomBtnData()" id="customBtnSaveBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold">Simpan Tombol</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Social Media Add/Edit Modal -->
+  <div id="adminSocialModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="bg-gray-900 w-full max-w-md rounded-3xl overflow-hidden shadow-2xl border border-gray-800 flex flex-col">
+      <div class="p-6 border-b border-gray-800 flex items-center justify-between">
+        <h3 id="adminSocialModalTitle" class="font-bold text-lg text-white">Tambah Link Sosmed</h3>
+        <button onclick="closeSocialModal()" class="p-1 text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <div class="p-6 space-y-4">
+        <input type="hidden" id="editSocialId">
+        <div>
+          <label id="socialNameLabel" class="block text-xs font-semibold mb-1 text-gray-400">Nama Tampilan *</label>
+          <input type="text" id="socialNameInput" placeholder="Nama link..." class="w-full px-4 py-2.5 text-sm bg-gray-800 border border-gray-700 rounded-xl text-white">
+        </div>
+        <div>
+          <label id="socialUrlLabel" class="block text-xs font-semibold mb-1 text-gray-400">URL Tujuan Link *</label>
+          <input type="text" id="socialUrlInput" placeholder="https://..." class="w-full px-4 py-2.5 text-sm bg-gray-800 border border-gray-700 rounded-xl text-white">
+        </div>
+        <div class="p-4 bg-gray-800/50 rounded-2xl border border-gray-700 space-y-3">
+          <label id="socialIconChoiceLabel" class="block text-xs font-bold uppercase tracking-wider text-indigo-400">Pilihan Ikon</label>
+          <select id="socialIconType" onchange="toggleSocialIconInputs()" class="w-full px-3 py-2 text-xs bg-gray-800 border border-gray-700 rounded-lg text-white">
+            <option value="system" id="optSystemIcon">Ikon Bawaan Sistem</option>
+            <option value="upload" id="optUploadIcon">Upload File Gambar (PNG/JPEG)</option>
+          </select>
+          <div id="systemIconGroup">
+            <select id="socialSystemIcon" class="w-full px-3 py-2 text-xs bg-gray-800 border border-gray-700 rounded-lg text-white mt-2">
+              <option value="users">Saluran WA (Users)</option>
+              <option value="video">TikTok / Video</option>
+              <option value="instagram">Instagram</option>
+              <option value="youtube">YouTube</option>
+              <option value="message-circle">WhatsApp Chat</option>
+              <option value="link">Link Umum</option>
+            </select>
+          </div>
+          <div id="uploadIconGroup" class="hidden space-y-2 mt-2">
+            <input type="file" id="socialFileInput" accept="image/*" onchange="handleSocialIconUpload(event)" class="w-full text-xs text-gray-400">
+            <div id="socialIconPreview" class="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center overflow-hidden"></div>
+          </div>
+        </div>
+      </div>
+      <div class="p-6 border-t border-gray-800 bg-gray-800/30 flex justify-end gap-3">
+        <button onclick="closeSocialModal()" id="socialCancelBtn" class="px-4 py-2.5 rounded-xl border border-gray-700 text-sm font-semibold text-gray-300">Batal</button>
+        <button onclick="saveSocialData()" id="socialSaveBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold">Simpan Sosmed</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Product Detail & Buyer Checkout Modal -->
+  <div id="productModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="bg-gray-900 w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl transform scale-95 transition-transform duration-300 max-h-[90vh] flex flex-col border border-gray-800" id="productModalContent"></div>
+  </div>
+
+  <!-- Cart Modal -->
+  <div id="cartModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-end opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="bg-gray-900 w-full max-w-md h-full flex flex-col justify-between p-6 shadow-2xl transform translate-x-full transition-transform duration-300 border-l border-gray-800" id="cartContent">
+      <div>
+        <div class="flex items-center justify-between pb-4 border-b border-gray-800">
+          <h2 class="text-lg font-bold flex items-center gap-2 text-white"><i data-lucide="shopping-bag" class="w-5 h-5"></i> <span id="cartTitleText">Keranjang Belanja</span></h2>
+          <button onclick="toggleCartModal()" class="p-1 text-gray-400 hover:text-white"><i data-lucide="x" class="w-6 h-6"></i></button>
+        </div>
+        <div id="cartItems" class="py-4 space-y-4 max-h-[60vh] overflow-y-auto"></div>
+      </div>
+      <div class="border-t border-gray-800 pt-4 space-y-4">
+        <div class="flex justify-between items-center text-sm font-semibold text-gray-300">
+          <span id="totalPaymentLabel">Total Pembayaran:</span>
+          <span id="cartTotal" class="text-lg font-bold text-white">Rp 0</span>
+        </div>
+        <button onclick="checkoutWhatsAppCart()" id="checkoutWaBtnText" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition shadow-lg text-sm">
+          <i data-lucide="message-circle" class="w-5 h-5"></i> Checkout via WhatsApp
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive Payment Modal -->
+  <div id="interactivePaymentModal" class="fixed inset-0 z-[10000] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="bg-gray-900 w-full max-w-md rounded-3xl p-6 shadow-2xl border border-indigo-900/50 space-y-4 relative">
+      <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+        <h3 id="paymentGatewayTitle" class="font-bold text-base text-white flex items-center gap-2">
+          <i data-lucide="shield-check" class="w-5 h-5 text-indigo-400"></i> Selesaikan Pembayaran
+        </h3>
+        <button onclick="closeInteractivePayment()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div id="paymentGatewayBody" class="space-y-3 text-xs"></div>
+
+      <div class="pt-2 border-t border-gray-800 space-y-2">
+        <button onclick="confirmPaymentAndSendWa()" id="confirmPaymentBtnText" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl shadow-lg flex items-center justify-center gap-2 cursor-pointer transition text-xs">
+          <i data-lucide="check-circle" class="w-4 h-4"></i> Saya Sudah Transfer / Bayar (Konfirmasi)
+        </button>
+        <button onclick="closeInteractivePayment()" id="cancelPaymentBtnText" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 py-2.5 rounded-xl font-semibold transition text-xs">
+          Batal / Kembali
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Product Add/Edit Modal (ADMIN) -->
+  <div id="adminProductModal" class="fixed inset-0 z-[9000] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="bg-gray-900 w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl transform scale-95 transition-transform duration-300 max-h-[92vh] flex flex-col border border-gray-800 relative" id="adminProductModalContainer">
+      <div class="p-6 border-b border-gray-800 flex items-center justify-between sticky top-0 bg-gray-900 z-20">
+        <h3 id="adminProductModalTitle" class="font-extrabold text-lg text-white">Tambah Produk Baru</h3>
+        <button type="button" onclick="closeProductAdminModal()" class="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-full transition cursor-pointer z-30 focus:outline-none" title="Tutup Modal">
+          <i data-lucide="x" class="w-6 h-6"></i>
+        </button>
+      </div>
+      <div class="p-6 overflow-y-auto space-y-4 flex-1">
+        <input type="hidden" id="editProductId">
+        <div>
+          <label id="prodNameLabel" class="block text-xs font-semibold mb-1 text-gray-400">Nama Produk *</label>
+          <input type="text" id="prodNameInput" placeholder="Nama barang" class="w-full px-4 py-2.5 text-sm bg-gray-800 border border-gray-700 rounded-xl text-white font-bold">
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label id="prodPriceLabel" class="block text-xs font-semibold mb-1 text-gray-400">Harga Total (Rp) *</label>
+            <input type="number" id="prodPriceInput" placeholder="120000" class="w-full px-4 py-2.5 text-sm bg-gray-800 border border-gray-700 rounded-xl text-white">
+          </div>
+          <div>
+            <label id="prodCategoryLabel" class="block text-xs font-semibold mb-1 text-gray-400">Kategori *</label>
+            <select id="prodCategoryInput" class="w-full px-4 py-2.5 text-sm bg-gray-800 border border-gray-700 rounded-xl text-white"></select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label id="prodStockLabel" class="block text-xs font-semibold mb-1 text-gray-400">Jumlah Stok *</label>
+            <input type="number" id="prodStockInput" value="20" class="w-full px-4 py-2.5 text-sm bg-gray-800 border border-gray-700 rounded-xl text-white">
+          </div>
+          <div>
+            <label id="prodVariantsLabel" class="block text-xs font-semibold mb-1 text-gray-400">Varian (Pisah koma)</label>
+            <input type="text" id="prodVariantsInput" value="S, M, L, XL" class="w-full px-4 py-2.5 text-sm bg-gray-800 border border-gray-700 rounded-xl text-white">
+          </div>
+        </div>
+        <div class="p-3 bg-indigo-950/40 rounded-2xl border border-indigo-900/50 flex items-center gap-2">
+          <input type="checkbox" id="prodIsUnlimited" onchange="toggleUnlimitedStockInput(this.checked)" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 bg-gray-800 border-gray-700">
+          <label for="prodIsUnlimited" class="text-xs font-bold text-indigo-300">Set Stok Unlimited (Tanpa Batas / Selalu Tersedia)</label>
+        </div>
+
+        <!-- FITUR TEKS BERJALAN CUSTOM & TANGGAL MULAI (PERBAIKAN FOTO 3: Waktu Berakhir Produk Dihapus) -->
+        <div class="p-4 bg-indigo-950/40 rounded-2xl border border-indigo-900/50 space-y-3">
+          <div class="flex items-center gap-2">
+            <input type="checkbox" id="prodIsTimeLimited" onchange="toggleTimeLimitedFields(this.checked)" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 bg-gray-800 border-gray-700">
+            <label id="timeLimitedToggleLabel" for="prodIsTimeLimited" class="text-xs font-bold text-indigo-300">Aktifkan Badge / Teks Berjalan di Kartu Produk</label>
+          </div>
+          <div id="timeLimitedFieldsContainer" class="space-y-3 hidden pt-2 border-t border-indigo-900/50">
+            <div>
+              <label id="customBadgeTextLabel" class="block text-[11px] font-semibold mb-1 text-gray-400">Teks / Pesan Berjalan (Custom)</label>
+              <input type="text" id="prodCustomBadgeText" placeholder="Contoh: Stok Unlimited — Diskon Spesial!" class="w-full px-3 py-2 text-xs bg-gray-800 border border-gray-700 rounded-xl text-white">
+            </div>
+            <div>
+              <label id="startDateLabel" class="block text-[11px] font-semibold mb-1 text-gray-400">Tanggal & Waktu Mulai (Opsional)</label>
+              <input type="date" id="prodStartDate" class="w-full px-3 py-2 text-xs bg-gray-800 border border-gray-700 rounded-xl text-white">
+            </div>
+            <div>
+              <label id="endDateLabel" class="block text-[11px] font-semibold mb-1 text-amber-400">⏰ Masa Aktif / Waktu Berakhir Produk (Sebelum Dihapus Sistem)</label>
+              <input type="datetime-local" id="prodEndDate" class="w-full px-3 py-2 text-xs bg-gray-800 border border-gray-700 rounded-xl text-white font-bold">
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 p-4 bg-gray-800/40 rounded-2xl border border-gray-800">
+          <div>
+            <label id="dpTypeLabel" class="block text-xs font-semibold mb-1 text-gray-400">Tipe Minimal DP</label>
+            <select id="prodDpTypeInput" class="w-full px-3 py-2 text-xs bg-gray-800 border border-gray-700 rounded-lg text-white">
+              <option value="percent" id="optPercent">Persentase (%)</option>
+              <option value="nominal" id="optNominal">Nominal Tetap (Rp)</option>
+            </select>
+          </div>
+          <div>
+            <label id="dpValueLabel" class="block text-xs font-semibold mb-1 text-gray-400">Nilai Minimal DP</label>
+            <input type="number" id="prodDpValueInput" value="80000" class="w-full px-3 py-2 text-xs bg-gray-800 border border-gray-700 rounded-lg text-white">
+          </div>
+        </div>
+
+        <!-- PILIHAN UPLOAD FOTO -->
+        <div class="p-4 bg-gray-800/50 rounded-2xl border border-gray-700 space-y-3">
+          <label id="prodImageChoiceLabel" class="block text-xs font-bold uppercase tracking-wider text-indigo-400">Pilihan Gambar Produk</label>
+          
+          <div>
+            <label id="prodUploadFileLabel" class="block text-xs font-semibold mb-1 text-gray-400">📁 Upload dari Galeri / File</label>
+            <div class="border-2 border-dashed border-gray-700 hover:border-indigo-500 rounded-xl p-3 text-center bg-gray-800/30 cursor-pointer relative">
+              <input type="file" id="prodFileInput" accept="image/*" onchange="handleProductFileUpload(event)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+              <div class="flex flex-col items-center gap-1">
+                <i data-lucide="image-plus" class="w-5 h-5 text-indigo-400"></i>
+                <span id="prodPickFileText" class="text-xs text-gray-300 font-semibold">Pilih foto dari Galeri / File HP</span>
+              </div>
+            </div>
+          </div>
+
+          <div id="prodOrText" class="text-center text-[10px] text-gray-500 font-bold uppercase">— ATAU —</div>
+
+          <div>
+            <label id="prodUrlLabel" class="block text-xs font-semibold mb-1 text-gray-400">🔗 Masukkan URL Gambar (Opsional)</label>
+            <input type="text" id="prodImgInput" oninput="updateProductImgPreview(this.value)" placeholder="https://..." class="w-full px-4 py-2.5 text-xs bg-gray-800 border border-gray-700 rounded-xl text-white">
+          </div>
+
+          <div id="productImgPreviewContainer" class="hidden text-center pt-2">
+            <p id="prodPreviewLabel" class="text-[11px] font-semibold text-gray-400 mb-1">Preview Gambar:</p>
+            <img id="productImgPreview" class="w-24 h-24 object-cover mx-auto rounded-xl border border-gray-700 shadow-md">
+          </div>
+        </div>
+
+        <div>
+          <label id="prodDescLabel" class="block text-xs font-semibold mb-1 text-gray-400">Deskripsi Produk *</label>
+          <textarea id="prodDescInput" rows="3" placeholder="Penjelasan detail..." class="w-full px-4 py-2.5 text-sm bg-gray-800 border border-gray-700 rounded-xl text-white leading-relaxed"></textarea>
+        </div>
+      </div>
+      <div class="p-6 border-t border-gray-800 bg-gray-900 sticky bottom-0 z-20 flex justify-end gap-3">
+        <button type="button" onclick="closeProductAdminModal()" id="prodCancelBtn" class="px-5 py-2.5 rounded-xl border border-gray-700 text-sm font-semibold text-gray-300 hover:bg-gray-800 transition">Batal</button>
+        <button type="button" onclick="saveProductData()" id="prodSaveBtn" class="bg-white hover:bg-gray-200 text-black px-6 py-2.5 rounded-xl text-sm font-bold shadow-md transition">Simpan Produk</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript Application Logic -->
+  <script src="script.js"></script>
+
+</div>
+</body>
+</html>
