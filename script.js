@@ -563,6 +563,8 @@
       localStorage.setItem('starvoids_notification', JSON.stringify(storeNotification));
       localStorage.setItem('starvoids_recently_viewed', JSON.stringify(recentlyViewed));
       localStorage.setItem('starvoids_reviews', JSON.stringify(reviews));
+      syncDataToSupabase();
+    
     }
 
     // --- FITUR: LOGIKA NOTIFIKASI PENGUMUMAN DENGAN WAKTU TIMEOUT / HAPUS ---
