@@ -2872,24 +2872,39 @@ async function syncDataToSupabase() {
   }
 }
 
-    // Fungsi Mengambil Data dari Supabase Cloud Database
-    async function fetchDatamFromSupabase() {
-      if (!supabaseClient) return;
-      try {
-        const { data, error } = await supabaseClient.from('store_data').select('*').eq('id', 1).single();
-        if (data && !error) {
-          if (data.products) products = JSON.parse(data.products);
-          if (data.categories) categories = JSON.parse(data.categories);
-          if (data.settings) storeSettings = JSON.parse(data.settings);
-          if (data.orders) orders = JSON.parse(data.orders);
-          if (data.payments) paymentMethods = JSON.parse(data.payments);
-          if (data.socials) socialLinks = JSON.parse(data.socials);
-          saveData();
-          renderProducts();
-          renderCategories();
-          console.log('Data successfully loaded from Supabase Cloud!');
-        }
-      } catch(err) {
-        console.log('Fetch from Supabase notice:', err);
-      }
+    // --- FUNGSI UNTUK MENARIK DATA DARI SUPABASE KE HP PENGUNJUNG ---
+async function loadDataFromSupabase() {
+  if (!supabaseClient) return;
+  try {
+    const { data, error } = await supabaseClient
+      .from('store_data')
+      .select('*')
+      .eq('id', 1)
+      .single();
+      
+    if (error) {
+      console.error('Gagal memuat data dari Supabase:', error);
+      return;
     }
+    
+    if (data) {
+      // Mengubah kembali data string JSON dari database menjadi objek asli toko Anda
+      products = data.products ? JSON.parse(data.products) : products;
+      categories = data.categories ? JSON.parse(data.categories) : categories;
+      storeSettings = data.settings ? JSON.parse(data.settings) : storeSettings;
+      orders = data.orders ? JSON.parse(data.orders) : orders;
+      paymentMethods = data.payments ? JSON.parse(data.payments) : paymentMethods;
+      socialLinks = data.socials ? JSON.parse(data.socials) : socialLinks;
+      
+          // Render ulang tampilan di layar
+      if (typeof renderProducts === 'function') renderProducts();
+      if (typeof updateStoreUI === 'function') updateStoreUI();
+    }
+  } catch (err) {
+    console.error('Terjadi kesalahan:', err);
+  }
+}
+
+window.addEventListener('DOMContentLoaded', async () => {
+  await loadDataFromSupabase();
+});
