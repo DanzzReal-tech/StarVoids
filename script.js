@@ -2837,40 +2837,40 @@ Mohon informasi instruksi pembayaran selanjutnya. Terima kasih!`;
 
 
     // --- SUPABASE CLOUD DATABASE INTEGRATION ---
-    // Masukkan URL & Anon Key Supabase Anda di bawah ini atau atur lewat Pengaturan Admin
-    let supabaseUrl = localStorage.getItem('starvoids_supabase_url') || 'https://eifoguwwjpfygrujnuoy.supabase.co';
-    let supabaseKey = localStorage.getItem('starvoids_supabase_key') || 'sb_publishable_pNa22bnWJfwTbihIoFp1wg_9T1Zw3tf';
-    let supabaseClient = null;
+const supabaseUrl = 'https://eifoguwwjpfygrujnuoy.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpZm9ndXd3anBmeWdydWpudW95Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM5MDM5OTQsImV4cCI6MjEwOTQ3OTk5NH0.RNYEvhh1Km3HqE8wdQBmMoRLqLKzB1shJYbp8FxtKMQ'; 
 
-    try {
-      if (window.supabase && supabaseUrl !== 'https://eifoguwwjpfygrujnuoy.supabase.co') {
-        supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-      }
-    } catch(e) {
-      console.log('Supabase init notice:', e);
-    }
+let supabaseClient = null;
 
-    // Fungsi Sinkronisasi Data ke Supabase Cloud Database
-    async function syncDataToSupabase() {
-      if (!supabaseClient) return;
-      try {
-        const payload = {
-          id: 1,
-          products: JSON.stringify(products),
-          categories: JSON.stringify(categories),
-          settings: JSON.stringify(storeSettings),
-          orders: JSON.stringify(orders),
-          payments: JSON.stringify(paymentMethods),
-          socials: JSON.stringify(socialLinks),
-          updated_at: new Date()
-        };
-        const { error } = await supabaseClient.from('store_data').upsert(payload);
-        if (error) console.error('Supabase sync error:', error.message);
-        else console.log('Data successfully synced to Supabase Cloud!');
-      } catch(err) {
-        console.error('Supabase connection failed:', err);
-      }
-    }
+try {
+  if (window.supabase) {
+    supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+  }
+} catch(e) {
+  console.log('Supabase init notice:', e);
+}
+
+// Fungsi Sinkronisasi Data ke Supabase Cloud Database
+async function syncDataToSupabase() {
+  if (!supabaseClient) return;
+  try {
+    const payload = {
+      id: 1,
+      products: JSON.stringify(products),
+      categories: JSON.stringify(categories),
+      settings: JSON.stringify(storeSettings),
+      orders: JSON.stringify(orders),
+      payments: JSON.stringify(paymentMethods),
+      socials: JSON.stringify(socialLinks),
+      updated_at: new Date()
+    };
+    const { error } = await supabaseClient.from('store_data').upsert([payload]);
+    if (error) console.error('Supabase sync error:', error);
+    else console.log('Data successfully synced to Supabase!');
+  } catch(err) {
+    console.error('Supabase connection failed:', err);
+  }
+}
 
     // Fungsi Mengambil Data dari Supabase Cloud Database
     async function fetchDatamFromSupabase() {
